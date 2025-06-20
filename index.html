@@ -164,9 +164,15 @@
       }
       obstacles = obstacles.filter(ob => ob.y < canvas.height);
 
-      if (player.movingLeft) player.x -= player.speed;
-      if (player.movingRight) player.x += player.speed;
-      player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
+      // Player movement
+      if (player.movingLeft) {
+        player.x -= player.speed;
+        if (player.x < 0) player.x = 0; // Prevent going out of bounds
+      }
+      if (player.movingRight) {
+        player.x += player.speed;
+        if (player.x + player.radius * 2 > canvas.width) player.x = canvas.width - player.radius * 2; // Prevent going out of bounds
+      }
 
       drawPlayer();
       drawObstacles();
