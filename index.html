@@ -1,4 +1,3 @@
-```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +8,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: #87CEEB; /* Light blue sky color */
+      background: #111;
       font-family: 'Rubik', sans-serif;
       overflow: hidden;
       touch-action: manipulation;
@@ -24,7 +23,7 @@
 
     canvas {
       display: block;
-      background: #87CEEB; /* Light blue sky color */
+      background: linear-gradient(to bottom, #1a1a1a, #0d0d0d);
     }
 
     .addiction-screen {
@@ -39,14 +38,27 @@
       align-items: center;
       background: rgba(0,0,0,0.9);
       z-index: 100;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .addiction-title {
       font-size: 3rem;
       background: linear-gradient(90deg, #12c2e9, #c471ed, #f64f59);
       -webkit-background-clip: text;
+      background-clip: text;
       color: transparent;
       margin-bottom: 20px;
+      animation: pulseText 2s infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
     }
 
     .addiction-btn {
@@ -61,10 +73,11 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       position: relative;
       overflow: hidden;
+      transition: transform 0.3s ease;
     }
 
     .addiction-btn:hover {
-      opacity: 0.9;
+      transform: scale(1.05);
     }
 
     .score {
@@ -73,64 +86,21 @@
       left: 20px;
       color: white;
       font-size: 1.5rem;
+      z-index: 50;
     }
 
-    /* Arrow buttons */
-    .arrow-button {
+    .sound-toggle {
       position: absolute;
-      width: 50px;
-      height: 50px;
-      background-color: rgba(255, 255, 255, 0.8);
-      border: 2px solid #000;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      font-size: 24px;
-      z-index: 10;
-    }
-
-    .arrow-button:hover {
-      background-color: rgba(255, 255, 255, 1);
-    }
-
-    #left-arrow {
-      left: 20px;
-      bottom: 20px;
-    }
-
-    #right-arrow {
-      right: 20px;
-      bottom: 20px;
-    }
-
-    /* Sound control buttons */
-    .sound-button {
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      background-color: rgba(255, 255, 255, 0.8);
-      border: 2px solid #000;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      font-size: 20px;
-      z-index: 10;
-    }
-
-    #sound-button {
-      left: 20px;
       top: 20px;
-    }
-
-    #music-button {
       right: 20px;
-      top: 20px;
+      color: white;
+      font-size: 1.5rem;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 50;
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
@@ -139,6 +109,7 @@
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
     <div class="score" id="score-display">Score: 0</div>
+    <button class="sound-toggle" id="toggle-sound">🔊</button>
 
     <div class="addiction-screen" id="start-screen">
       <h1 class="addiction-title">PUFF RUN</h1>
@@ -151,27 +122,17 @@
 
     <div class="addiction-screen" id="game-over-screen" style="display: none;">
       <h1 class="addiction-title">YOU RELAPSED</h1>
-      <p id="final-score" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
+      <p id="score-display-final" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
       <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
     </div>
-
-    <!-- Arrow buttons -->
-    <div class="arrow-button" id="left-arrow">←</div>
-    <div class="arrow-button" id="right-arrow">→</div>
-
-    <!-- Sound control buttons -->
-    <div class="sound-button" id="sound-button">🔊</div>
-    <div class="sound-button" id="music-button">🎵</div>
   </div>
 
-  <audio id="background-music" loop>
-    <source src="your-background-music-file.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
+  <audio id="bg-music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_88be8d12a8.mp3" type="audio/mpeg">
   </audio>
 
-  <audio id="collision-sound">
-    <source src="your-collision-sound-file.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
+  <audio id="hit-sound">
+    <source src="https://cdn.pixabay.com/download/audio/2021/11/15/audio_c8d4f037d6.mp3" type="audio/mpeg">
   </audio>
 
   <script>
@@ -180,12 +141,24 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    const bgMusic = document.getElementById('bg-music');
+    const hitSound = document.getElementById('hit-sound');
+    const soundToggle = document.getElementById('toggle-sound');
+
+    let soundOn = true;
+    soundToggle.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundToggle.textContent = soundOn ? '🔊' : '🔇';
+      if (!soundOn) bgMusic.pause();
+      else if (gameActive) bgMusic.play();
+    });
+
     let player = {
       x: canvas.width / 2 - 25,
       y: canvas.height - 100,
-      radius: 25, // Changed to radius for round shape
-      color: '#00008B', // Dark blue color
-      speed: 10, // Increased speed
+      radius: 25,
+      color: '#8B0000',
+      speed: 8,
       movingLeft: false,
       movingRight: false
     };
@@ -193,8 +166,32 @@
     let obstacles = [];
     let score = 0;
     let gameActive = false;
-    let soundEnabled = true;
-    let musicEnabled = true;
+    let backgroundStars = [];
+
+    for (let i = 0; i < 100; i++) {
+      backgroundStars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.5,
+        speed: 0.5 + Math.random()
+      });
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      backgroundStars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fill();
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+    }
 
     function spawnObstacle() {
       const width = 40 + Math.random() * 30;
@@ -218,29 +215,26 @@
 
     function updateGame() {
       if (!gameActive) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
 
       if (Math.random() < 0.02) spawnObstacle();
       for (let ob of obstacles) {
-        ob.y += ob.speed + score / 100; // Increase speed based on score
+        ob.y += ob.speed;
         if (
           ob.x < player.x + player.radius * 2 &&
           ob.x + ob.width > player.x &&
           ob.y < player.y + player.radius * 2 &&
           ob.y + ob.height > player.y
-        ) endGame();
+        ) {
+          if (soundOn) hitSound.play();
+          endGame();
+        }
       }
       obstacles = obstacles.filter(ob => ob.y < canvas.height);
 
-      // Player movement
-      if (player.movingLeft) {
-        player.x -= player.speed;
-        if (player.x < 0) player.x = 0; // Prevent going out of bounds
-      }
-      if (player.movingRight) {
-        player.x += player.speed;
-        if (player.x + player.radius * 2 > canvas.width) player.x = canvas.width - player.radius * 2; // Prevent going out of bounds
-      }
+      if (player.movingLeft) player.x -= player.speed;
+      if (player.movingRight) player.x += player.speed;
+      player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
 
       drawPlayer();
       drawObstacles();
@@ -256,46 +250,19 @@
       gameActive = true;
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-over-screen').style.display = 'none';
-      if (musicEnabled) document.getElementById('background-music').play(); // Play background music
+      if (soundOn) bgMusic.play();
       requestAnimationFrame(updateGame);
     }
 
     function endGame() {
       gameActive = false;
-      document.getElementById('final-score').textContent = `Score: ${score}`;
-      if (soundEnabled) document.getElementById('collision-sound').play(); // Play collision sound
-      if (musicEnabled) document.getElementById('background-music').pause(); // Pause music on game over
+      document.getElementById('score-display-final').textContent = `Score: ${score}`;
       document.getElementById('game-over-screen').style.display = 'flex';
+      bgMusic.pause();
     }
 
     document.getElementById('play-btn').addEventListener('click', startGame);
     document.getElementById('retry-btn').addEventListener('click', startGame);
-
-    document.getElementById('left-arrow').addEventListener('click', () => {
-      player.movingLeft = true;
-      setTimeout(() => player.movingLeft = false, 100); // Temporary movement
-    });
-
-    document.getElementById('right-arrow').addEventListener('click', () => {
-      player.movingRight = true;
-      setTimeout(() => player.movingRight = false, 100); // Temporary movement
-    });
-
-    document.getElementById('sound-button').addEventListener('click', () => {
-      soundEnabled = !soundEnabled; // Toggle sound
-      document.getElementById('sound-button').textContent = soundEnabled ? '🔊' : '🔇'; // Update button icon
-    });
-
-    document.getElementById('music-button').addEventListener('click', () => {
-      musicEnabled = !musicEnabled; // Toggle music
-      if (musicEnabled) {
-        document.getElementById('background-music').play();
-        document.getElementById('music-button').textContent = '🎵'; // Update button icon
-      } else {
-        document.getElementById('background-music').pause();
-        document.getElementById('music-button').textContent = '🔇'; // Update button icon
-      }
-    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft') player.movingLeft = true;
@@ -305,15 +272,6 @@
       if (e.key === 'ArrowLeft') player.movingLeft = false;
       if (e.key === 'ArrowRight') player.movingRight = false;
     });
-
-    // Continuous movement update
-    function gameLoop() {
-      if (gameActive) {
-        updateGame();
-        requestAnimationFrame(gameLoop);
-      }
-    }
   </script>
 </body>
 </html>
-```
