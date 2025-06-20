@@ -1,4 +1,3 @@
-
 ```
 <!DOCTYPE html>
 <html lang="en">
@@ -104,6 +103,11 @@
     Your browser does not support the audio element.
   </audio>
 
+  <audio id="collision-sound">
+    <source src="your-collision-sound-file.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
   <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -114,8 +118,8 @@
       x: canvas.width / 2 - 25,
       y: canvas.height - 100,
       radius: 25, // Changed to radius for round shape
-      color: '#00ffcc',
-      speed: 8,
+      color: '#00008B', // Dark blue color
+      speed: 10, // Increased speed
       movingLeft: false,
       movingRight: false
     };
@@ -150,7 +154,7 @@
 
       if (Math.random() < 0.02) spawnObstacle();
       for (let ob of obstacles) {
-        ob.y += ob.speed;
+        ob.y += ob.speed + score / 100; // Increase speed based on score
         if (
           ob.x < player.x + player.radius * 2 &&
           ob.x + ob.width > player.x &&
@@ -185,6 +189,7 @@
     function endGame() {
       gameActive = false;
       document.getElementById('final-score').textContent = `Score: ${score}`;
+      document.getElementById('collision-sound').play(); // Play collision sound
       document.getElementById('background-music').pause(); // Pause music on game over
       document.getElementById('game-over-screen').style.display = 'flex';
     }
