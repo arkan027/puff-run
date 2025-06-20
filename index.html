@@ -1,3 +1,5 @@
+
+```
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +10,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: #111;
+      background: #87CEEB; /* Sky color */
       font-family: 'Rubik', sans-serif;
       overflow: hidden;
       touch-action: manipulation;
@@ -97,6 +99,11 @@
     </div>
   </div>
 
+  <audio id="background-music" loop>
+    <source src="your-background-music-file.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
   <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -106,8 +113,7 @@
     let player = {
       x: canvas.width / 2 - 25,
       y: canvas.height - 100,
-      width: 50,
-      height: 50,
+      radius: 25, // Changed to radius for round shape
       color: '#00ffcc',
       speed: 8,
       movingLeft: false,
@@ -126,7 +132,9 @@
 
     function drawPlayer() {
       ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
+      ctx.beginPath();
+      ctx.arc(player.x + player.radius, player.y + player.radius, player.radius, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     function drawObstacles() {
@@ -144,9 +152,9 @@
       for (let ob of obstacles) {
         ob.y += ob.speed;
         if (
-          ob.x < player.x + player.width &&
+          ob.x < player.x + player.radius * 2 &&
           ob.x + ob.width > player.x &&
-          ob.y < player.y + player.height &&
+          ob.y < player.y + player.radius * 2 &&
           ob.y + ob.height > player.y
         ) endGame();
       }
@@ -154,7 +162,7 @@
 
       if (player.movingLeft) player.x -= player.speed;
       if (player.movingRight) player.x += player.speed;
-      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+      player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
 
       drawPlayer();
       drawObstacles();
@@ -170,12 +178,14 @@
       gameActive = true;
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-over-screen').style.display = 'none';
+      document.getElementById('background-music').play(); // Play background music
       requestAnimationFrame(updateGame);
     }
 
     function endGame() {
       gameActive = false;
       document.getElementById('final-score').textContent = `Score: ${score}`;
+      document.getElementById('background-music').pause(); // Pause music on game over
       document.getElementById('game-over-screen').style.display = 'flex';
     }
 
