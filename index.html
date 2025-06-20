@@ -345,10 +345,6 @@
             game.timer = setInterval(updateGameTime, 1000);
             game.difficultyTimer = setInterval(increaseDifficulty, 10000);
             
-            // Track play count (for addiction metrics)
-            game.playCount++;
-            localStorage.setItem('playCount', game.playCount);
-            
             // Show craving indicator after 30 seconds
             setTimeout(() => {
                 if (game.active) cravingIndicator.style.display = 'block';
