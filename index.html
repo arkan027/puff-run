@@ -105,6 +105,33 @@
       right: 20px;
       bottom: 20px;
     }
+
+    /* Sound control buttons */
+    .sound-button {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: 2px solid #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      font-size: 20px;
+      z-index: 10;
+    }
+
+    #sound-button {
+      left: 20px;
+      top: 20px;
+    }
+
+    #music-button {
+      right: 20px;
+      top: 20px;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
 </head>
@@ -131,6 +158,10 @@
     <!-- Arrow buttons -->
     <div class="arrow-button" id="left-arrow">←</div>
     <div class="arrow-button" id="right-arrow">→</div>
+
+    <!-- Sound control buttons -->
+    <div class="sound-button" id="sound-button">🔊</div>
+    <div class="sound-button" id="music-button">🎵</div>
   </div>
 
   <audio id="background-music" loop>
@@ -162,6 +193,8 @@
     let obstacles = [];
     let score = 0;
     let gameActive = false;
+    let soundEnabled = true;
+    let musicEnabled = true;
 
     function spawnObstacle() {
       const width = 40 + Math.random() * 30;
@@ -223,15 +256,15 @@
       gameActive = true;
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-over-screen').style.display = 'none';
-      document.getElementById('background-music').play(); // Play background music
+      if (musicEnabled) document.getElementById('background-music').play(); // Play background music
       requestAnimationFrame(updateGame);
     }
 
     function endGame() {
       gameActive = false;
       document.getElementById('final-score').textContent = `Score: ${score}`;
-      document.getElementById('collision-sound').play(); // Play collision sound
-      document.getElementById('background-music').pause(); // Pause music on game over
+      if (soundEnabled) document.getElementById('collision-sound').play(); // Play collision sound
+      if (musicEnabled) document.getElementById('background-music').pause(); // Pause music on game over
       document.getElementById('game-over-screen').style.display = 'flex';
     }
 
@@ -246,6 +279,22 @@
     document.getElementById('right-arrow').addEventListener('click', () => {
       player.movingRight = true;
       setTimeout(() => player.movingRight = false, 100); // Temporary movement
+    });
+
+    document.getElementById('sound-button').addEventListener('click', () => {
+      soundEnabled = !soundEnabled; // Toggle sound
+      document.getElementById('sound-button').textContent = soundEnabled ? '🔊' : '🔇'; // Update button icon
+    });
+
+    document.getElementById('music-button').addEventListener('click', () => {
+      musicEnabled = !musicEnabled; // Toggle music
+      if (musicEnabled) {
+        document.getElementById('background-music').play();
+        document.getElementById('music-button').textContent = '🎵'; // Update button icon
+      } else {
+        document.getElementById('background-music').pause();
+        document.getElementById('music-button').textContent = '🔇'; // Update button icon
+      }
     });
 
     document.addEventListener('keydown', (e) => {
