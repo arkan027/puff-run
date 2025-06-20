@@ -172,10 +172,6 @@
                 The longer you play, the harder it gets!
             </p>
             <button class="addiction-btn" id="play-btn">START CRAVING</button>
-            <div style="position: relative;">
-                <button class="addiction-btn" id="rewards-btn">DAILY FIX</button>
-                <div class="craving-indicator" id="reward-indicator"></div>
-            </div>
         </div>
         
         <div class="addiction-screen" id="game-over-screen" style="display: none;">
@@ -250,7 +246,6 @@
         const scoreDisplay = document.getElementById('score-display');
         const addictionComment = document.getElementById('addiction-comment');
         const rewardAmount = document.getElementById('reward-amount');
-        const rewardIndicator = document.getElementById('reward-indicator');
         
         // Initialize game
         function init() {
@@ -286,7 +281,6 @@
             // Mouse/touch controls
             document.getElementById('play-btn').addEventListener('click', startGame);
             document.getElementById('retry-btn').addEventListener('click', startGame);
-            document.getElementById('rewards-btn').addEventListener('click', showRewardScreen);
             document.getElementById('claim-btn').addEventListener('click', claimReward);
             document.getElementById('share-btn').addEventListener('click', shareScore);
             
@@ -419,7 +413,7 @@
         function checkWithdrawal() {
             const now = Math.floor(Date.now() / 1000);
             if (now - game.lastReward > WITHDRAWAL_TIME) {
-                rewardIndicator.style.display = 'block';
+                cravingIndicator.style.display = 'block';
             }
         }
         
@@ -440,15 +434,6 @@
             ];
             
             addictionComment.textContent = comments[game.addictionLevel];
-        }
-        
-        function showRewardScreen() {
-            if (rewardIndicator.style.display === 'block') {
-                const rewards = [100, 200, 300, 500, 1000];
-                const reward = rewards[Math.min(game.addictionLevel, rewards.length - 1)];
-                rewardAmount.textContent = `+${reward}`;
-                rewardScreen.style.display = 'flex';
-            }
         }
         
         function claimReward() {
