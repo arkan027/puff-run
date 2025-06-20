@@ -74,6 +74,37 @@
       color: white;
       font-size: 1.5rem;
     }
+
+    /* Arrow buttons */
+    .arrow-button {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: 2px solid #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      font-size: 24px;
+      z-index: 10;
+    }
+
+    .arrow-button:hover {
+      background-color: rgba(255, 255, 255, 1);
+    }
+
+    #left-arrow {
+      left: 20px;
+      bottom: 20px;
+    }
+
+    #right-arrow {
+      right: 20px;
+      bottom: 20px;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
 </head>
@@ -96,6 +127,10 @@
       <p id="final-score" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
       <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
     </div>
+
+    <!-- Arrow buttons -->
+    <div class="arrow-button" id="left-arrow">←</div>
+    <div class="arrow-button" id="right-arrow">→</div>
   </div>
 
   <audio id="background-music" loop>
@@ -202,6 +237,16 @@
 
     document.getElementById('play-btn').addEventListener('click', startGame);
     document.getElementById('retry-btn').addEventListener('click', startGame);
+
+    document.getElementById('left-arrow').addEventListener('click', () => {
+      player.movingLeft = true;
+      setTimeout(() => player.movingLeft = false, 100); // Temporary movement
+    });
+
+    document.getElementById('right-arrow').addEventListener('click', () => {
+      player.movingRight = true;
+      setTimeout(() => player.movingRight = false, 100); // Temporary movement
+    });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft') player.movingLeft = true;
