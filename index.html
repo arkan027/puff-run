@@ -65,12 +65,21 @@
     .addiction-btn:hover {
       opacity: 0.9;
     }
+
+    .score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      font-size: 1.5rem;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div id="game-container">
     <canvas id="game-canvas"></canvas>
+    <div class="score" id="score-display">Score: 0</div>
 
     <div class="addiction-screen" id="start-screen">
       <h1 class="addiction-title">PUFF RUN</h1>
@@ -83,7 +92,7 @@
 
     <div class="addiction-screen" id="game-over-screen" style="display: none;">
       <h1 class="addiction-title">YOU RELAPSED</h1>
-      <p id="score-display" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
+      <p id="final-score" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
       <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
     </div>
   </div>
@@ -151,6 +160,7 @@
       drawObstacles();
 
       score++;
+      document.getElementById('score-display').textContent = `Score: ${score}`;
       requestAnimationFrame(updateGame);
     }
 
@@ -165,7 +175,7 @@
 
     function endGame() {
       gameActive = false;
-      document.getElementById('score-display').textContent = `Score: ${score}`;
+      document.getElementById('final-score').textContent = `Score: ${score}`;
       document.getElementById('game-over-screen').style.display = 'flex';
     }
 
@@ -183,3 +193,4 @@
   </script>
 </body>
 </html>
+```
