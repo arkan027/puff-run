@@ -1,461 +1,185 @@
-```
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puff Run - The Impossible Challenge</title>
-    <style>
-        /* Addictive visual design */
-        body {
-            margin: 0;
-            padding: 0;
-            background: #111;
-            font-family: 'Rubik', sans-serif;
-            overflow: hidden;
-            touch-action: manipulation;
-            user-select: none;
-        }
-        
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        canvas {
-            display: block;
-            background: radial-gradient(circle, #2a2a2a 0%, #111 100%);
-        }
-        
-        /* Addictive UI elements */
-        .addiction-meter {
-            position: absolute;
-            bottom: 70px;
-            width: 80%;
-            left: 10%;
-            height: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .addiction-progress {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-            transition: width 0.3s ease;
-        }
-        
-        .craving-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #ff4757;
-            box-shadow: 0 0 15px #ff4757;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0.7; }
-        }
-        
-        /* Game screens */
-        .addiction-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(0,0,0,0.9);
-            z-index: 100;
-        }
-        
-        .addiction-title {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            background: linear-gradient(90deg, #12c2e9, #c471ed, #f64f59);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .addiction-btn {
-            background: linear-gradient(45deg, #4776E6, #8E54E9);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 50px;
-            margin: 10px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .addiction-btn:active {
-            transform: scale(0.98);
-        }
-        
-        .addiction-btn::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -60%;
-            width: 50px;
-            height: 200%;
-            background: rgba(255,255,255,0.3);
-            transform: rotate(30deg);
-            transition: all 0.5s;
-        }
-        
-        .addiction-btn:hover::after {
-            left: 120%;
-        }
-        
-        /* Reward system */
-        .reward-glow {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, transparent 70%);
-            animation: glow 2s infinite;
-            z-index: -1;
-        }
-        
-        @keyframes glow {
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-        
-        /* Stats tracking */
-        .stats-container {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 80%;
-            padding: 20px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 20px;
-            display: none;
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700;900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puff Run - The Impossible Challenge</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      font-family: 'Rubik', sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    canvas {
+      display: block;
+      background: radial-gradient(circle, #2a2a2a 0%, #111 100%);
+    }
+
+    .addiction-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.9);
+      z-index: 100;
+    }
+
+    .addiction-title {
+      font-size: 3rem;
+      background: linear-gradient(90deg, #12c2e9, #c471ed, #f64f59);
+      -webkit-background-clip: text;
+      color: transparent;
+      margin-bottom: 20px;
+    }
+
+    .addiction-btn {
+      background: linear-gradient(45deg, #4776E6, #8E54E9);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border-radius: 50px;
+      margin: 10px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .addiction-btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        
-        <!-- Addictive mechanics -->
-        <div class="addiction-meter">
-            <div class="addiction-progress" id="addiction-progress"></div>
-        </div>
-        
-        <div class="craving-indicator" id="craving-indicator" style="display: none;"></div>
-        
-        <!-- Game screens -->
-        <div class="addiction-screen" id="start-screen">
-            <h1 class="addiction-title">PUFF RUN</h1>
-            <p style="color: #aaa; margin-bottom: 30px; text-align: center; max-width: 80%;">
-                Do you have what it takes to beat your cravings?<br>
-                The longer you play, the harder it gets!
-            </p>
-            <button class="addiction-btn" id="play-btn">START CRAVING</button>
-        </div>
-        
-        <div class="addiction-screen" id="game-over-screen" style="display: none;">
-            <div class="reward-glow" id="new-highscore-glow" style="display: none;"></div>
-            <h1 class="addiction-title">YOU RELAPSED</h1>
-            <p id="score-display" style="font-size: 1.5rem; margin-bottom: 10px;">Score: 0</p>
-            <p id="addiction-comment" style="color: #aaa; margin-bottom: 30px;">
-                Come back stronger!
-            </p>
-            <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
-            <button class="addiction-btn" id="share-btn">BRAG ABOUT IT</button>
-        </div>
-        
-        <div class="addiction-screen" id="reward-screen" style="display: none;">
-            <div class="reward-glow"></div>
-            <h1 class="addiction-title">YOUR DAILY FIX</h1>
-            <div id="reward-amount" style="font-size: 3rem; margin: 20px;">+500</div>
-            <p style="color: #aaa; margin-bottom: 30px;">Come back tomorrow for more!</p>
-            <button class="addiction-btn" id="claim-btn">CLAIM REWARD</button>
-        </div>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div class="addiction-screen" id="start-screen">
+      <h1 class="addiction-title">PUFF RUN</h1>
+      <p style="color: #aaa; text-align: center; max-width: 80%; margin-bottom: 30px;">
+        Do you have what it takes to beat your cravings?<br>
+        The longer you play, the harder it gets!
+      </p>
+      <button class="addiction-btn" id="play-btn">START CRAVING</button>
     </div>
 
-    <script>
-        // Core addiction mechanics
-        const ADDICTION_THRESHOLDS = [30, 60, 120, 300, 600]; // In seconds
-        const ADDICTION_LEVELS = ["Experimental", "Regular", "Habitual", "Dependent", "Addicted"];
-        const WITHDRAWAL_TIME = 86400; // 24 hours in seconds
-        
-        // Game state
-        let game = {
-            canvas: null,
-            ctx: null,
-            width: 0,
-            height: 0,
-            active: false,
-            score: 0,
-            highScore: localStorage.getItem('puffRunHighScore') || 0,
-            streak: 0,
-            combo: 1,
-            speed: 3,
-            timePlayed: 0,
-            lastReward: localStorage.getItem('lastRewardTime') || 0,
-            addictionLevel: 0,
-            withdrawalTimer: localStorage.getItem('withdrawalTimer') || 0,
-            playCount: localStorage.getItem('playCount') || 0
-        };
-        
-        // Player data
-        const player = {
-            x: 0,
-            y: 0,
-            width: 40,
-            height: 60,
-            movingLeft: false,
-            movingRight: false
-        };
-        
-        // Game objects
-        let obstacles = [];
-        let collectibles = [];
-        let powerups = [];
-        let lastObstacleTime = 0;
-        let lastRewardPopup = 0;
-        
-        // DOM elements
-        const startScreen = document.getElementById('start-screen');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const rewardScreen = document.getElementById('reward-screen');
-        const addictionProgress = document.getElementById('addiction-progress');
-        const cravingIndicator = document.getElementById('craving-indicator');
-        const newHighscoreGlow = document.getElementById('new-highscore-glow');
-        const scoreDisplay = document.getElementById('score-display');
-        const addictionComment = document.getElementById('addiction-comment');
-        const rewardAmount = document.getElementById('reward-amount');
-        
-        // Initialize game
-        function init() {
-            game.canvas = document.getElementById('game-canvas');
-            game.ctx = game.canvas.getContext('2d');
-            
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-            
-            // Check for withdrawal symptoms
-            checkWithdrawal();
-            
-            // Set up controls
-            setupControls();
-            
-            // Start animation loop
-            requestAnimationFrame(update);
-        }
-        
-        function resizeCanvas() {
-            game.width = window.innerWidth;
-            game.height = window.innerHeight;
-            game.canvas.width = game.width;
-            game.canvas.height = game.height;
-            
-            if (game.active) {
-                player.x = game.width / 2 - player.width / 2;
-                player.y = game.height - player.height - 50;
-            }
-        }
-        
-        function setupControls() {
-            // Mouse/touch controls
-            document.getElementById('play-btn').addEventListener('click', startGame);
-            document.getElementById('retry-btn').addEventListener('click', startGame);
-            document.getElementById('claim-btn').addEventListener('click', claimReward);
-            document.getElementById('share-btn').addEventListener('click', shareScore);
-            
-            // Keyboard controls
-            document.addEventListener('keydown', (e) => {
-                if (!game.active) return;
-                
-                if (e.key === 'ArrowLeft') player.movingLeft = true;
-                if (e.key === 'ArrowRight') player.movingRight = true;
-            });
-            
-            document.addEventListener('keyup', (e) => {
-                if (e.key === 'ArrowLeft') player.movingLeft = false;
-                if (e.key === 'ArrowRight') player.movingRight = false;
-            });
-            
-            // Touch controls
-            document.addEventListener('touchstart', handleTouch);
-            document.addEventListener('touchend', () => {
-                player.movingLeft = false;
-                player.movingRight = false;
-            });
-        }
-        
-        function handleTouch(e) {
-            if (!game.active) return;
-            
-            const touchX = e.touches[0].clientX;
-            const centerX = game.width / 2;
-            
-            if (touchX < centerX) {
-                player.movingLeft = true;
-                player.movingRight = false;
-            } else {
-                player.movingRight = true;
-                player.movingLeft = false;
-            }
-        }
-        
-        function startGame() {
-            // Reset game state
-            game.active = true;
-            game.score = 0;
-            game.streak = 0;
-            game.combo = 1;
-            game.speed = 3;
-            game.timePlayed = 0;
-            obstacles = [];
-            collectibles = [];
-            powerups = [];
-            
-            // Position player
-            player.x = game.width / 2 - player.width / 2;
-            player.y = game.height - player.height - 50;
-            
-            // Hide screens
-            startScreen.style.display = 'none';
-            gameOverScreen.style.display = 'none';
-            rewardScreen.style.display = 'none';
-            
-            // Start game timers
-            game.timer = setInterval(updateGameTime, 1000);
-            game.difficultyTimer = setInterval(increaseDifficulty, 10000);
-            
-            // Show craving indicator after 30 seconds
-            setTimeout(() => {
-                if (game.active) cravingIndicator.style.display = 'block';
-            }, 30000);
-        }
-        
-        function gameOver() {
-            game.active = false;
-            clearInterval(game.timer);
-            clearInterval(game.difficultyTimer);
-            cravingIndicator.style.display = 'none';
-            
-            // Update high score
-            if (game.score > game.highScore) {
-                game.highScore = game.score;
-                localStorage.setItem('puffRunHighScore', game.highScore);
-                newHighscoreGlow.style.display = 'block';
-            }
-            
-            // Set addiction comment based on performance
-            setAddictionComment();
-            
-            // Show game over screen
-            scoreDisplay.textContent = `Score: ${game.score}`;
-            gameOverScreen.style.display = 'flex';
-            
-            // Trigger withdrawal timer
-            startWithdrawalTimer();
-        }
-        
-        function update() {
-            if (!game.active) {
-                requestAnimationFrame(update);
-                return;
-            }
-            
-            // Clear canvas
-            game.ctx.clearRect(0, 0, game.width, game.height);
-            
-            // Update game state
-            updatePlayer();
-            updateObstacles();
-            updateCollectibles();
-            updatePowerups();
-            
-            // Draw game
-            drawBackground();
-            drawPlayer();
-            drawObstacles();
-            drawCollectibles();
-            drawPowerups();
-            drawUI();
-            
-            requestAnimationFrame(update);
-        }
-        
-        // Game logic functions...
-        // [Previous game logic implementation would go here]
-        // Including collision detection, object spawning, etc.
+    <div class="addiction-screen" id="game-over-screen" style="display: none;">
+      <h1 class="addiction-title">YOU RELAPSED</h1>
+      <p id="score-display" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
+      <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
+    </div>
+  </div>
 
-        // Addictive features implementation
-        function checkWithdrawal() {
-            const now = Math.floor(Date.now() / 1000);
-            if (now - game.lastReward > WITHDRAWAL_TIME) {
-                cravingIndicator.style.display = 'block';
-            }
-        }
-        
-        function startWithdrawalTimer() {
-            localStorage.setItem('withdrawalTimer', Math.floor(Date.now() / 1000));
-        }
-        
-        function setAddictionComment() {
-            const addictionIndex = ADDICTION_THRESHOLDS.findIndex(t => game.timePlayed < t);
-            game.addictionLevel = addictionIndex === -1 ? ADDICTION_LEVELS.length - 1 : addictionIndex;
-            
-            const comments = [
-                "Just trying it out? Come back for more!",
-                "You're getting hooked! Play again!",
-                "This is becoming a habit...",
-                "You need your daily dose!",
-                "You can't live without Puff Run!"
-            ];
-            
-            addictionComment.textContent = comments[game.addictionLevel];
-        }
-        
-        function claimReward() {
-            const now = Math.floor(Date.now() / 1000);
-            game.lastReward = now;
-            localStorage.setItem('lastRewardTime', now);
-            rewardIndicator.style.display = 'none';
-            rewardScreen.style.display = 'none';
-        }
-        
-        function shareScore() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Puff Run Addiction',
-                    text: `I scored ${game.score} on Puff Run! Can you beat my craving?`,
-                    url: 'https://example.com/puff-run'
-                }).catch(console.error);
-            } else {
-                // Fallback for browsers without Web Share API
-                alert(`Share your score: ${game.score}! Challenge friends to beat your craving!`);
-            }
-        }
-        
-        // Initialize game when loaded
-        window.addEventListener('load', init);
-    </script>
+  <script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 100,
+      width: 50,
+      height: 50,
+      color: '#00ffcc',
+      speed: 8,
+      movingLeft: false,
+      movingRight: false
+    };
+
+    let obstacles = [];
+    let score = 0;
+    let gameActive = false;
+
+    function spawnObstacle() {
+      const width = 40 + Math.random() * 30;
+      const x = Math.random() * (canvas.width - width);
+      obstacles.push({ x, y: -60, width, height: 20, speed: 4 + Math.random() * 4 });
+    }
+
+    function drawPlayer() {
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+      ctx.fillStyle = '#ff4b2b';
+      for (let ob of obstacles) {
+        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      }
+    }
+
+    function updateGame() {
+      if (!gameActive) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (Math.random() < 0.02) spawnObstacle();
+      for (let ob of obstacles) {
+        ob.y += ob.speed;
+        if (
+          ob.x < player.x + player.width &&
+          ob.x + ob.width > player.x &&
+          ob.y < player.y + player.height &&
+          ob.y + ob.height > player.y
+        ) endGame();
+      }
+      obstacles = obstacles.filter(ob => ob.y < canvas.height);
+
+      if (player.movingLeft) player.x -= player.speed;
+      if (player.movingRight) player.x += player.speed;
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+      drawPlayer();
+      drawObstacles();
+
+      score++;
+      requestAnimationFrame(updateGame);
+    }
+
+    function startGame() {
+      score = 0;
+      obstacles = [];
+      gameActive = true;
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('game-over-screen').style.display = 'none';
+      requestAnimationFrame(updateGame);
+    }
+
+    function endGame() {
+      gameActive = false;
+      document.getElementById('score-display').textContent = `Score: ${score}`;
+      document.getElementById('game-over-screen').style.display = 'flex';
+    }
+
+    document.getElementById('play-btn').addEventListener('click', startGame);
+    document.getElementById('retry-btn').addEventListener('click', startGame);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') player.movingLeft = true;
+      if (e.key === 'ArrowRight') player.movingRight = true;
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowLeft') player.movingLeft = false;
+      if (e.key === 'ArrowRight') player.movingRight = false;
+    });
+  </script>
 </body>
 </html>
-```
