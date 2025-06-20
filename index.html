@@ -9,7 +9,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: #87CEEB; /* Sky color */
+      background: #87CEEB; /* Light blue sky color */
       font-family: 'Rubik', sans-serif;
       overflow: hidden;
       touch-action: manipulation;
@@ -24,7 +24,7 @@
 
     canvas {
       display: block;
-      background: radial-gradient(circle, #2a2a2a 0%, #111 100%);
+      background: #87CEEB; /* Light blue sky color */
     }
 
     .addiction-screen {
@@ -211,6 +211,14 @@
       if (e.key === 'ArrowLeft') player.movingLeft = false;
       if (e.key === 'ArrowRight') player.movingRight = false;
     });
+
+    // Continuous movement update
+    function gameLoop() {
+      if (gameActive) {
+        updateGame();
+        requestAnimationFrame(gameLoop);
+      }
+    }
   </script>
 </body>
 </html>
