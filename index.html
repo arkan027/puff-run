@@ -1,426 +1,270 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Puff Run - Super Magnificent Edition</title>
+  <title>Puff Run by Soran</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap');
     * {
-      margin: 0; padding: 0; box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
     html, body {
+      width: 100%;
       height: 100%;
       overflow: hidden;
-      background: radial-gradient(circle at center, #050011 0%, #000000 100%);
+      background: radial-gradient(circle at center, #000, #111);
       font-family: 'Rubik', sans-serif;
-      color: #eee;
-      user-select: none;
     }
-    #game-canvas {
+    canvas {
       display: block;
-      background: radial-gradient(circle at center, #0b0033, #000);
-      box-shadow:
-        0 0 20px #6a0dadaa,
-        inset 0 0 40px #4b0082cc;
-      margin: auto;
-      position: absolute;
-      top: 0; bottom: 0; left: 0; right: 0;
-      border-radius: 20px;
-      max-width: 100vw;
-      max-height: 100vh;
+      background: radial-gradient(circle at center, #222, #000);
     }
-    #score-display, #level-message {
-      position: fixed;
-      top: 15px;
+    #score-display, #level-message, #start-screen, #game-over-screen {
+      position: absolute;
+      color: white;
+      z-index: 10;
+      font-size: 2rem;
+      text-align: center;
+    }
+    #score-display {
+      top: 10px;
       left: 20px;
       font-size: 1.5rem;
-      text-shadow: 0 0 10px #8a2be2cc;
-      font-weight: 700;
-      letter-spacing: 2px;
     }
     #level-message {
-      top: 60px;
-      font-size: 1.3rem;
-      color: #d88cff;
-      text-shadow:
-        0 0 6px #d88cff,
-        0 0 20px #a35adf,
-        0 0 30px #bb7fff;
-      opacity: 0;
-      transition: opacity 0.4s ease;
+      top: 50px;
+      width: 100%;
     }
     #toggle-sound, #toggle-pause {
-      position: fixed;
-      top: 15px;
-      right: 20px;
+      position: absolute;
+      top: 10px;
+      right: 60px;
+      font-size: 1.5rem;
+      z-index: 10;
       background: none;
       border: none;
-      color: #d8aaff;
-      font-size: 1.7rem;
+      color: white;
       cursor: pointer;
-      user-select: none;
-      text-shadow: 0 0 10px #a03dfdcc;
-      transition: color 0.3s ease;
-      margin-left: 12px;
     }
-    #toggle-pause { right: 60px; }
-    #toggle-sound:hover, #toggle-pause:hover {
-      color: #fff;
-      text-shadow:
-        0 0 10px #fff,
-        0 0 20px #a03dfd;
+    #toggle-pause {
+      right: 20px;
     }
     #start-screen, #game-over-screen {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 5, 30, 0.85);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      gap: 20px;
-      color: #d9b8ff;
-      font-size: 2.2rem;
-      font-weight: 700;
-      text-shadow:
-        0 0 8px #a33dffcc,
-        0 0 15px #8a2be2aa;
-      z-index: 100;
-      border-radius: 20px;
-      user-select: none;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      flex-direction: column;
     }
     button {
-      background: linear-gradient(135deg, #a14fff, #592b94);
-      border: none;
-      padding: 14px 32px;
-      border-radius: 999px;
-      color: #fff;
+      padding: 12px 24px;
       font-size: 1.25rem;
-      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      background: #6a0dad; /* universal purple galaxy color */
+      color: white;
       cursor: pointer;
-      box-shadow:
-        0 0 10px #8a2be2cc;
-      transition: background 0.3s ease;
-      user-select: none;
-      letter-spacing: 1px;
+      transition: background 0.3s;
     }
     button:hover {
-      background: linear-gradient(135deg, #c874ff, #7a4fc9);
-      box-shadow:
-        0 0 15px #bb7fff;
-    }
-    /* Glow pulse animation */
-    @keyframes glowPulse {
-      0%, 100% { text-shadow: 0 0 10px #a55aff; }
-      50% { text-shadow: 0 0 25px #d88cff; }
+      background: #7d3cff;
     }
   </style>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet" />
 </head>
 <body>
-  <canvas id="game-canvas" width="800" height="600" aria-label="Puff Run game"></canvas>
+  <canvas id="game-canvas"></canvas>
   <div id="score-display">Score: 0</div>
-  <div id="level-message">LEVEL 1!</div>
-  <button id="toggle-sound" aria-label="Toggle Sound">🔊</button>
-  <button id="toggle-pause" aria-label="Toggle Pause">⏸️</button>
-
+  <div id="level-message"></div>
+  <button id="toggle-sound">🔊</button>
+  <button id="toggle-pause">⏸️</button>
   <div id="start-screen">
-    <div>PUFF RUN</div>
-    <button id="play-btn">START GAME</button>
+    <button id="play-btn">Start Game</button>
   </div>
-
-  <div id="game-over-screen" style="display:none;">
-    <div>GAME OVER</div>
-    <div id="final-score" style="font-size:1.8rem; margin-top:12px;"></div>
-    <button id="retry-btn">PLAY AGAIN</button>
+  <div id="game-over-screen" style="display: none;">
+    <div id="score-display-final"></div>
+    <button id="retry-btn">Play Again</button>
   </div>
-
-  <audio id="bg-music" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2023/03/22/audio_b4bb0fadb8.mp3?filename=techno-race-145141.mp3"></audio>
-  <audio id="hit-sound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_792ba4168e.mp3?filename=retro-game-over-21391.mp3"></audio>
+  <audio id="bg-music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2023/03/22/audio_b4bb0fadb8.mp3?filename=techno-race-145141.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="hit-sound">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_792ba4168e.mp3?filename=retro-game-over-21391.mp3" type="audio/mpeg" />
+  </audio>
   <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-
-    // Scaling for high DPI displays
-    function fixDPI() {
-      const dpi = window.devicePixelRatio || 1;
-      canvas.width = canvas.clientWidth * dpi;
-      canvas.height = canvas.clientHeight * dpi;
-      ctx.scale(dpi, dpi);
-    }
-    // Set fixed size and scale for smooth display
-    canvas.style.width = '800px';
-    canvas.style.height = '600px';
-    fixDPI();
-
-    // Game variables
-    let score = 0;
-    let currentLevel = 1;
-    let gameActive = false;
-    let paused = false;
-    let soundOn = true;
-    let obstacles = [];
-    let particles = [];
-    const maxParticles = 150;
-    const starCount = 120;
-
-    // Player object with smooth movement & glow effect
-    const player = {
-      x: canvas.width / 2 / (window.devicePixelRatio || 1) - 30,
-      y: canvas.height / (window.devicePixelRatio || 1) - 90,
-      radius: 30,
-      color: '#0af',
-      speed: 10,
-      velocityX: 0,
-      glowColor1: '#0af',
-      glowColor2: '#004b88',
-      movingLeft: false,
-      movingRight: false,
-      updatePosition() {
-        this.x += this.velocityX;
-        if (this.x < this.radius) this.x = this.radius;
-        if (this.x > (canvas.width / (window.devicePixelRatio || 1)) - this.radius) this.x = (canvas.width / (window.devicePixelRatio || 1)) - this.radius;
-      },
-      draw() {
-        const grd = ctx.createRadialGradient(this.x, this.y, this.radius / 2, this.x, this.y, this.radius);
-        grd.addColorStop(0, this.glowColor1);
-        grd.addColorStop(1, this.glowColor2);
-        ctx.shadowColor = this.glowColor1;
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    };
-
-    // Galaxy stars background with twinkle animation
-    const stars = [];
-    class Star {
-      constructor() {
-        this.reset();
-      }
-      reset() {
-        this.x = Math.random() * canvas.width / (window.devicePixelRatio || 1);
-        this.y = Math.random() * canvas.height / (window.devicePixelRatio || 1);
-        this.radius = Math.random() * 1.3 + 0.2;
-        this.speed = 0.15 + Math.random() * 0.4;
-        this.alpha = Math.random() * 0.7 + 0.3;
-        this.alphaChange = 0.01 + Math.random() * 0.02;
-      }
-      update() {
-        this.y += this.speed;
-        this.alpha += this.alphaChange;
-        if (this.alpha > 1 || this.alpha < 0.3) this.alphaChange *= -1;
-        if (this.y > canvas.height / (window.devicePixelRatio || 1)) {
-          this.y = 0;
-          this.x = Math.random() * canvas.width / (window.devicePixelRatio || 1);
-        }
-      }
-      draw() {
-        ctx.save();
-        ctx.globalAlpha = this.alpha;
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
-        gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(1, 'transparent');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-    for (let i = 0; i < starCount; i++) stars.push(new Star());
-
-    // Obstacle class with glowing purple galaxy gradient and particles
-    class Obstacle {
-      constructor() {
-        this.width = 50 + Math.random() * 50;
-        this.height = 20;
-        this.x = Math.random() * ((canvas.width / (window.devicePixelRatio || 1)) - this.width);
-        this.y = -this.height - Math.random() * 200;
-        this.speed = getObstacleSpeed();
-        this.glowColors = ['#8A2BE2', '#BA55D3', '#4B0082'];
-      }
-      update() {
-        this.y += this.speed;
-        if (this.y > (canvas.height / (window.devicePixelRatio || 1))) this.reset();
-        if (Math.random() < 0.15) this.emitParticles();
-      }
-      reset() {
-        this.width = 50 + Math.random() * 50;
-        this.x = Math.random() * ((canvas.width / (window.devicePixelRatio || 1)) - this.width);
-        this.y = -this.height - Math.random() * 200;
-        this.speed = getObstacleSpeed();
-      }
-      emitParticles() {
-        for (let i = 0; i < 3; i++) {
-          if (particles.length >= maxParticles) break;
-          particles.push(new Particle(this.x + Math.random() * this.width, this.y + this.height, '#bb7fff'));
-        }
-      }
-      draw() {
-        const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
-        gradient.addColorStop(0, this.glowColors[0]);
-        gradient.addColorStop(0.5, this.glowColors[1]);
-        gradient.addColorStop(1, this.glowColors[2]);
-        ctx.shadowColor = '#bb7fff';
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = gradient;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.shadowBlur = 0;
-      }
-      collidesWith(px, py, pr) {
-        // Circle-rectangle collision
-        const cx = px;
-        const cy = py;
-        const rx = this.x;
-        const ry = this.y;
-        const rw = this.width;
-        const rh = this.height;
-
-        const closestX = Math.max(rx, Math.min(cx, rx + rw));
-        const closestY = Math.max(ry, Math.min(cy, ry + rh));
-        const dx = cx - closestX;
-        const dy = cy - closestY;
-
-        return (dx * dx + dy * dy) < (pr * pr);
-      }
-    }
-
-    // Particle class for subtle glow and trail effects
-    class Particle {
-      constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.radius = Math.random() * 3 + 1;
-        this.color = color;
-        this.alpha = 1;
-        this.velocityY = - (Math.random() * 1 + 0.5);
-        this.velocityX = (Math.random() - 0.5) * 0.5;
-      }
-      update() {
-        this.x += this.velocityX;
-        this.y += this.velocityY;
-        this.alpha -= 0.02;
-        if (this.alpha < 0) this.alpha = 0;
-      }
-      draw() {
-        ctx.save();
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    // Controls and input handling with smooth velocity changes
-    document.addEventListener('keydown', (e) => {
-      if (!gameActive) return;
-      if (e.key === 'ArrowLeft' || e.key === 'a') player.velocityX = -player.speed;
-      if (e.key === 'ArrowRight' || e.key === 'd') player.velocityX = player.speed;
-      if (e.key === 'Escape') togglePause();
-    });
-    document.addEventListener('keyup', (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') {
-        if (player.velocityX < 0) player.velocityX = 0;
-      }
-      if (e.key === 'ArrowRight' || e.key === 'd') {
-        if (player.velocityX > 0) player.velocityX = 0;
-      }
-    });
-
-    // Touch controls for mobile
-    let touchX = null;
-    canvas.addEventListener('touchstart', (e) => {
-      if (!gameActive) return;
-      touchX = e.touches[0].clientX;
-    });
-    canvas.addEventListener('touchmove', (e) => {
-      if (!gameActive || touchX === null) return;
-      const deltaX = e.touches[0].clientX - touchX;
-      player.x += deltaX * 0.3;
-      if (player.x < player.radius) player.x = player.radius;
-      if (player.x > (canvas.width / (window.devicePixelRatio || 1)) - player.radius) player.x = (canvas.width / (window.devicePixelRatio || 1)) - player.radius;
-      touchX = e.touches[0].clientX;
-    });
-    canvas.addEventListener('touchend', () => {
-      touchX = null;
-    });
-
-    // UI elements
-    const scoreDisplay = document.getElementById('score-display');
+    const bgMusic = document.getElementById('bg-music');
+    const hitSound = document.getElementById('hit-sound');
+    const soundToggle = document.getElementById('toggle-sound');
+    const pauseToggle = document.getElementById('toggle-pause');
     const levelMessage = document.getElementById('level-message');
     const startScreen = document.getElementById('start-screen');
     const gameOverScreen = document.getElementById('game-over-screen');
-    const finalScoreDisplay = document.getElementById('final-score');
-    const toggleSoundBtn = document.getElementById('toggle-sound');
-    const togglePauseBtn = document.getElementById('toggle-pause');
-    const playBtn = document.getElementById('play-btn');
-    const retryBtn = document.getElementById('retry-btn');
-    const bgMusic = document.getElementById('bg-music');
-    const hitSound = document.getElementById('hit-sound');
+    const scoreDisplay = document.getElementById('score-display');
+    const finalScoreDisplay = document.getElementById('score-display-final');
 
-    toggleSoundBtn.addEventListener('click', () => {
-      soundOn = !soundOn;
-      toggleSoundBtn.textContent = soundOn ? '🔊' : '🔇';
-      if (soundOn && gameActive) bgMusic.play();
-      else bgMusic.pause();
-    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    togglePauseBtn.addEventListener('click', togglePause);
+    let soundOn = true;
+    let paused = false;
+    let currentLevel = 0;
+    let gameActive = false;
+    let score = 0;
+    let obstacles = [];
+    let stars = [];
 
-    playBtn.addEventListener('click', startGame);
-    retryBtn.addEventListener('click', startGame);
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 100,
+      radius: 25,
+      color: '#0af',
+      speed: 8,
+      movingLeft: false,
+      movingRight: false
+    };
 
-    function togglePause() {
-      if (!gameActive) return;
-      paused = !paused;
-      togglePauseBtn.textContent = paused ? '▶️' : '⏸️';
-      if (!paused) requestAnimationFrame(gameLoop);
-      if (paused && soundOn) bgMusic.pause();
-      else if (!paused && soundOn) bgMusic.play();
+    // Create starfield
+    for (let i = 0; i < 150; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.5,
+        speed: 0.2 + Math.random() * 1.5
+      });
     }
 
-    // Level and obstacle speed management
+    soundToggle.onclick = () => {
+      soundOn = !soundOn;
+      soundToggle.textContent = soundOn ? '🔊' : '🔇';
+      if (!soundOn) bgMusic.pause();
+      else if (gameActive && !paused) bgMusic.play();
+    };
+
+    pauseToggle.onclick = () => {
+      paused = !paused;
+      pauseToggle.textContent = paused ? '▶️' : '⏸️';
+      if (!paused && gameActive) requestAnimationFrame(update);
+      else if (paused) bgMusic.pause();
+    };
+
+    function showLevelUp(level) {
+      levelMessage.textContent = `LEVEL ${level}!`;
+      levelMessage.style.display = 'block';
+      setTimeout(() => (levelMessage.style.display = 'none'), 2000);
+    }
+
     function getObstacleSpeed() {
-      const levels = [0, 500, 1500, 4000, 9000, 20000];
-      const speeds = [5, 7, 9, 12, 15, 20];
+      const levels = [1000, 2000, 5000, 10000, 20000, 50000];
+      const speeds = [8, 10, 12, 14, 16, 18];
       for (let i = levels.length - 1; i >= 0; i--) {
         if (score >= levels[i]) {
           if (currentLevel !== i + 1) {
+            showLevelUp(i + 1);
             currentLevel = i + 1;
-            showLevelUp(currentLevel);
           }
           return speeds[i];
         }
       }
-      return 4;
+      return 6;
     }
 
-    // Show level up message
-    function showLevelUp(level) {
-      levelMessage.textContent = `LEVEL ${level}!`;
-      levelMessage.style.opacity = '1';
-      setTimeout(() => { levelMessage.style.opacity = '0'; }, 1800);
-    }
-
-    // Spawn obstacles at random intervals
     function spawnObstacle() {
-      obstacles.push(new Obstacle());
+      const width = 40 + Math.random() * 30;
+      const x = Math.random() * (canvas.width - width);
+      const speed = getObstacleSpeed();
+      obstacles.push({ x, y: -60, width, height: 20, speed });
     }
 
-    // Update and draw all game elements
+    function drawPlayer() {
+      const grd = ctx.createRadialGradient(
+        player.x + player.radius,
+        player.y + player.radius,
+        player.radius / 2,
+        player.x + player.radius,
+        player.y + player.radius,
+        player.radius
+      );
+      grd.addColorStop(0, '#0af');
+      grd.addColorStop(1, '#005');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(player.x + player.radius, player.y + player.radius, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawObstacles() {
+      for (const ob of obstacles) {
+        const gradient = ctx.createLinearGradient(ob.x, ob.y, ob.x + ob.width, ob.y + ob.height);
+        // Purple galaxy style colors:
+        gradient.addColorStop(0, '#6a0dad'); // deep purple
+        gradient.addColorStop(0.5, '#9b30ff'); // medium orchid
+        gradient.addColorStop(1, '#4b0082'); // indigo
+        ctx.fillStyle = gradient;
+        ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+      }
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      for (const star of stars) {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fill();
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      }
+    }
+
     function update() {
       if (!gameActive || paused) return;
+      drawBackground();
 
-      // Update stars
-      stars.forEach(s => { s.update(); });
+      if (Math.random() < 0.02) spawnObstacle();
+      for (const ob of obstacles) {
+        ob.y += ob.speed;
+        if (
+          ob.x < player.x + player.radius * 2 &&
+          ob.x + ob.width > player.x &&
+          ob.y < player.y + player.radius * 2 &&
+          ob.y + ob.height > player.y
+        ) {
+          if (soundOn) hitSound.play();
+          return endGame();
+        }
+      }
+      obstacles = obstacles.filter((o) => o.y < canvas.height);
 
-      // Update obstacles
-      obstacles.forEach(ob
+      if (player.movingLeft) player.x -= player.speed;
+      if (player.movingRight) player.x += player.speed;
+      player.x = Math.max(0, Math.min(canvas.width - player.radius * 2, player.x));
+
+      drawPlayer();
+      drawObstacles();
+
+      score++;
+      scoreDisplay.textContent = `Score: ${score}`;
+
+      requestAnimationFrame(update);
+    }
+
+    function startGame() {
+      score = 0;
+      obstacles = [];
+      gameActive = true;
+      paused = false;
+      currentLevel = 0;
+      pauseToggle.textContent = '⏸️';
+      startScreen.style.display = 'none';
+      gameOverScr
