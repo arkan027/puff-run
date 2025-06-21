@@ -5,219 +5,172 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Puff Run - The Impossible Challenge</title>
   <style>
-    body {
+    * {
       margin: 0;
       padding: 0;
-      background: #000;
-      font-family: 'Rubik', sans-serif;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
-      touch-action: manipulation;
-      user-select: none;
+      background: linear-gradient(to bottom, #111, #000);
+      font-family: 'Rubik', sans-serif;
     }
-
-    #game-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-    }
-
     canvas {
       display: block;
-      background: linear-gradient(to bottom, #0d0d0d, #000);
+      background: radial-gradient(circle at center, #222, #000);
     }
-
-    .addiction-screen {
+    #score-display, #level-message, #start-screen, #game-over-screen {
       position: absolute;
+      color: white;
+      z-index: 10;
+      font-size: 2rem;
+      text-align: center;
+    }
+    #score-display {
+      top: 10px;
+      left: 20px;
+      font-size: 1.5rem;
+    }
+    #level-message {
+      top: 50px;
+      width: 100%;
+    }
+    #toggle-sound, #toggle-pause {
+      position: absolute;
+      top: 10px;
+      right: 60px;
+      font-size: 1.5rem;
+      z-index: 10;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    #toggle-pause {
+      right: 20px;
+    }
+    #start-screen, #game-over-screen {
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      background: rgba(0,0,0,0.95);
-      z-index: 100;
-      animation: fadeIn 1s ease forwards;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.8);
+      flex-direction: column;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .addiction-title {
-      font-size: 3rem;
-      background: linear-gradient(90deg, #12c2e9, #c471ed, #f64f59);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      margin-bottom: 20px;
-      animation: pulseText 2s infinite;
-    }
-
-    @keyframes pulseText {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.8; }
-    }
-
-    .addiction-btn {
-      background: linear-gradient(45deg, #4776E6, #8E54E9);
-      color: white;
+    button {
+      padding: 12px 24px;
+      font-size: 1.25rem;
       border: none;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      border-radius: 50px;
-      margin: 10px;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.3s ease;
-    }
-
-    .addiction-btn:hover {
-      transform: scale(1.05);
-    }
-
-    .score {
-      position: absolute;
-      top: 20px;
-      left: 20px;
+      border-radius: 8px;
+      background: #0af;
       color: white;
-      font-size: 1.5rem;
-      z-index: 50;
-    }
-
-    .sound-toggle, .pause-toggle {
-      position: absolute;
-      top: 20px;
-      color: white;
-      font-size: 1.5rem;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      border-radius: 10px;
-      padding: 10px;
       cursor: pointer;
-      z-index: 50;
     }
-
-    #toggle-sound {
-      right: 20px;
-    }
-
-    #toggle-pause {
-      left: 50%;
-      transform: translateX(-50%);
+    button:hover {
+      background: #09c;
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div id="game-container">
-    <canvas id="game-canvas"></canvas>
-    <div class="score" id="score-display">Score: 0</div>
-    <button class="sound-toggle" id="toggle-sound">🔊</button>
-    <button class="pause-toggle" id="toggle-pause">⏸️</button>
-
-    <div class="addiction-screen" id="start-screen">
-      <h1 class="addiction-title">PUFF RUN</h1>
-      <p style="color: #aaa; text-align: center; max-width: 80%; margin-bottom: 30px;">
-        Do you have what it takes to beat your cravings?<br>
-        The longer you play, the harder it gets!
-      </p>
-      <button class="addiction-btn" id="play-btn">START CRAVING</button>
-    </div>
-
-    <div class="addiction-screen" id="game-over-screen" style="display: none;">
-      <h1 class="addiction-title">YOU RELAPSED</h1>
-      <p id="score-display-final" style="font-size: 1.5rem; margin-bottom: 20px; color: white;">Score: 0</p>
-      <button class="addiction-btn" id="retry-btn">ONE MORE HIT</button>
-    </div>
+  <canvas id="game-canvas"></canvas>
+  <div id="score-display">Score: 0</div>
+  <div id="level-message"></div>
+  <button id="toggle-sound">🔊</button>
+  <button id="toggle-pause">⏸️</button>
+  <div id="start-screen">
+    <button id="play-btn">Start Game</button>
   </div>
-
-  <audio id="bg-music" loop autoplay>
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_88be8d12a8.mp3" type="audio/mpeg">
+  <div id="game-over-screen" style="display: none;">
+    <div id="score-display-final"></div>
+    <button id="retry-btn">Play Again</button>
+  </div>
+  <audio id="bg-music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2023/03/22/audio_b4bb0fadb8.mp3?filename=techno-race-145141.mp3" type="audio/mpeg">
   </audio>
-
   <audio id="hit-sound">
-    <source src="https://cdn.pixabay.com/download/audio/2021/11/15/audio_c8d4f037d6.mp3" type="audio/mpeg">
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_792ba4168e.mp3?filename=retro-game-over-21391.mp3" type="audio/mpeg">
   </audio>
-
   <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
     const bgMusic = document.getElementById('bg-music');
     const hitSound = document.getElementById('hit-sound');
     const soundToggle = document.getElementById('toggle-sound');
     const pauseToggle = document.getElementById('toggle-pause');
+    const levelMessage = document.getElementById('level-message');
+
+    const startScreen = document.getElementById('start-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const scoreDisplay = document.getElementById('score-display');
+    const finalScoreDisplay = document.getElementById('score-display-final');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     let soundOn = true;
     let paused = false;
+    let currentLevel = 0;
+    let gameActive = false;
+    let score = 0;
+    let obstacles = [];
+    let stars = [];
 
-    soundToggle.addEventListener('click', () => {
-      soundOn = !soundOn;
-      soundToggle.textContent = soundOn ? '🔊' : '🔇';
-      if (!soundOn) bgMusic.pause();
-      else if (gameActive) bgMusic.play();
-    });
-
-    pauseToggle.addEventListener('click', () => {
-      paused = !paused;
-      pauseToggle.textContent = paused ? '▶️' : '⏸️';
-      if (!paused && gameActive) requestAnimationFrame(updateGame);
-    });
-
-    let player = {
+    const player = {
       x: canvas.width / 2 - 25,
       y: canvas.height - 100,
       radius: 25,
-      color: '#8B0000',
+      color: '#0af',
       speed: 8,
       movingLeft: false,
       movingRight: false
     };
 
-    let obstacles = [];
-    let score = 0;
-    let gameActive = false;
-    let backgroundStars = [];
-
-    for (let i = 0; i < 100; i++) {
-      backgroundStars.push({
+    for (let i = 0; i < 150; i++) {
+      stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         radius: Math.random() * 1.5,
-        speed: 0.5 + Math.random()
+        speed: 0.2 + Math.random() * 1.5
       });
     }
 
-    function drawBackground() {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff';
-      backgroundStars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fill();
-        star.y += star.speed;
-        if (star.y > canvas.height) {
-          star.y = 0;
-          star.x = Math.random() * canvas.width;
-        }
-      });
+    soundToggle.onclick = () => {
+      soundOn = !soundOn;
+      soundToggle.textContent = soundOn ? '🔊' : '🔇';
+      if (!soundOn) bgMusic.pause();
+      else if (gameActive) bgMusic.play();
+    };
+
+    pauseToggle.onclick = () => {
+      paused = !paused;
+      pauseToggle.textContent = paused ? '▶️' : '⏸️';
+      if (!paused && gameActive) requestAnimationFrame(update);
+    };
+
+    function showLevelUp(level) {
+      levelMessage.textContent = `LEVEL ${level}!`;
+      levelMessage.style.display = 'block';
+      setTimeout(() => levelMessage.style.display = 'none', 2000);
     }
 
     function getObstacleSpeed() {
-      if (score >= 50000) return 18;
-      if (score >= 20000) return 16;
-      if (score >= 10000) return 14;
-      if (score >= 5000) return 12;
-      if (score >= 2000) return 10;
-      if (score >= 1000) return 8;
+      const levels = [1000, 2000, 5000, 10000, 20000, 50000];
+      const speeds = [8, 10, 12, 14, 16, 18];
+      for (let i = levels.length - 1; i >= 0; i--) {
+        if (score >= levels[i]) {
+          if (currentLevel !== i + 1) {
+            showLevelUp(i + 1);
+            currentLevel = i + 1;
+          }
+          return speeds[i];
+        }
+      }
       return 6;
     }
 
@@ -229,25 +182,48 @@
     }
 
     function drawPlayer() {
-      ctx.fillStyle = player.color;
+      const grd = ctx.createRadialGradient(player.x + player.radius, player.y + player.radius, player.radius / 2, player.x + player.radius, player.y + player.radius, player.radius);
+      grd.addColorStop(0, '#0af');
+      grd.addColorStop(1, '#005');
+      ctx.fillStyle = grd;
       ctx.beginPath();
       ctx.arc(player.x + player.radius, player.y + player.radius, player.radius, 0, Math.PI * 2);
       ctx.fill();
     }
 
     function drawObstacles() {
-      ctx.fillStyle = '#6A0DAD';
-      for (let ob of obstacles) {
+      for (const ob of obstacles) {
+        const gradient = ctx.createLinearGradient(ob.x, ob.y, ob.x + ob.width, ob.y + ob.height);
+        gradient.addColorStop(0, '#8A2BE2');
+        gradient.addColorStop(0.5, '#BA55D3');
+        gradient.addColorStop(1, '#4B0082');
+        ctx.fillStyle = gradient;
         ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
       }
     }
 
-    function updateGame() {
+    function drawBackground() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#fff';
+      for (const star of stars) {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fill();
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      }
+    }
+
+    function update() {
       if (!gameActive || paused) return;
       drawBackground();
 
       if (Math.random() < 0.02) spawnObstacle();
-      for (let ob of obstacles) {
+      for (const ob of obstacles) {
         ob.y += ob.speed;
         if (
           ob.x < player.x + player.radius * 2 &&
@@ -256,10 +232,10 @@
           ob.y + ob.height > player.y
         ) {
           if (soundOn) hitSound.play();
-          endGame();
+          return endGame();
         }
       }
-      obstacles = obstacles.filter(ob => ob.y < canvas.height);
+      obstacles = obstacles.filter(o => o.y < canvas.height);
 
       if (player.movingLeft) player.x -= player.speed;
       if (player.movingRight) player.x += player.speed;
@@ -267,10 +243,9 @@
 
       drawPlayer();
       drawObstacles();
-
       score++;
-      document.getElementById('score-display').textContent = `Score: ${score}`;
-      requestAnimationFrame(updateGame);
+      scoreDisplay.textContent = `Score: ${score}`;
+      requestAnimationFrame(update);
     }
 
     function startGame() {
@@ -278,28 +253,30 @@
       obstacles = [];
       gameActive = true;
       paused = false;
+      currentLevel = 0;
       pauseToggle.textContent = '⏸️';
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('game-over-screen').style.display = 'none';
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
       if (soundOn) bgMusic.play();
-      requestAnimationFrame(updateGame);
+      requestAnimationFrame(update);
     }
 
     function endGame() {
       gameActive = false;
-      document.getElementById('score-display-final').textContent = `Score: ${score}`;
-      document.getElementById('game-over-screen').style.display = 'flex';
+      finalScoreDisplay.textContent = `Score: ${score}`;
+      gameOverScreen.style.display = 'flex';
       bgMusic.pause();
     }
 
-    document.getElementById('play-btn').addEventListener('click', startGame);
-    document.getElementById('retry-btn').addEventListener('click', startGame);
+    document.getElementById('play-btn').onclick = startGame;
+    document.getElementById('retry-btn').onclick = startGame;
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', e => {
       if (e.key === 'ArrowLeft') player.movingLeft = true;
       if (e.key === 'ArrowRight') player.movingRight = true;
     });
-    document.addEventListener('keyup', (e) => {
+
+    document.addEventListener('keyup', e => {
       if (e.key === 'ArrowLeft') player.movingLeft = false;
       if (e.key === 'ArrowRight') player.movingRight = false;
     });
