@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Puff Run - Soran's Game</title>
+<title>Puff Run - Fixed Full Version</title>
 <style>
   * {
     margin: 0; padding: 0; box-sizing: border-box;
@@ -20,13 +20,10 @@
     background: radial-gradient(circle at center, #222, #000);
     width: 100vw;
     height: 100vh;
+    touch-action: none;
   }
-  #score-display, #level-message, #start-screen, #game-over-screen {
-    position: absolute;
-    z-index: 10;
-    text-align: center;
-    width: 100%;
-    font-weight: 700;
+  #score-display, #level-message, #start-screen, #game-over-screen, #continue-screen, #skin-store {
+    position: absolute; z-index: 10; text-align: center; width: 100%; font-weight: 700;
   }
   #score-display {
     top: 10px; left: 20px;
@@ -40,30 +37,52 @@
     pointer-events: none;
   }
   #toggle-sound, #toggle-pause {
-    position: absolute;
-    top: 10px;
-    right: 60px;
+    position: absolute; top: 10px; z-index: 10;
     font-size: 1.5rem;
-    z-index: 10;
     background: none;
     border: none;
     color: white;
     cursor: pointer;
     user-select: none;
   }
+  #toggle-sound {
+    right: 60px;
+  }
   #toggle-pause {
     right: 20px;
   }
-  #start-screen, #game-over-screen {
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+  #start-screen, #game-over-screen, #continue-screen, #skin-store {
+    top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.85);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    font-size: 2rem;
+    z-index: 20;
+  }
+  #continue-screen div {
+    margin-bottom: 20px;
+    font-size: 1.7rem;
+  }
+  #skin-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 90vw;
+    margin-bottom: 20px;
+  }
+  #skin-list button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    font-size: 0.8rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
-    z-index: 20;
   }
   button {
     padding: 12px 24px;
@@ -88,12 +107,27 @@
 <div id="level-message"></div>
 <button id="toggle-sound" title="Toggle Sound">🔊</button>
 <button id="toggle-pause" title="Pause/Resume">⏸️</button>
+
 <div id="start-screen">
   <button id="play-btn">Start Game</button>
+  <button id="store-btn">🎨 Skins</button>
 </div>
+
 <div id="game-over-screen" style="display:none;">
   <div id="score-display-final"></div>
   <button id="retry-btn">Play Again</button>
+</div>
+
+<div id="continue-screen" style="display:none;">
+  <div>You hit an obstacle! Watch an ad to continue?</div>
+  <button id="watch-ad-btn">Watch Ad</button>
+  <button id="no-thanks-btn">No Thanks</button>
+</div>
+
+<div id="skin-store" style="display:none;">
+  <h2>Select Your Dreamy Skin</h2>
+  <div id="skin-list"></div>
+  <button id="close-skin-store-btn">Close</button>
 </div>
 
 <audio id="bg-music" loop preload="auto">
@@ -116,40 +150,277 @@
   const gameOverScreen = document.getElementById('game-over-screen');
   const scoreDisplay = document.getElementById('score-display');
   const finalScoreDisplay = document.getElementById('score-display-final');
+  const continueScreen = document.getElementById('continue-screen');
+  const watchAdBtn = document.getElementById('watch-ad-btn');
+  const noThanksBtn = document.getElementById('no-thanks-btn');
+  const skinStore = document.getElementById('skin-store');
+  const skinList = document.getElementById('skin-list');
+  const storeBtn = document.getElementById('store-btn');
+  const closeSkinStoreBtn = document.getElementById('close-skin-store-btn');
 
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
+  let width, height;
   let soundOn = true;
   let paused = false;
-  let currentLevel = 0;
   let gameActive = false;
   let score = 0;
+  let currentLevel = 0;
   let obstacles = [];
   let stars = [];
+  let player;
+  let continueAvailable = false; // track if player can continue after ad
 
-  const player = {
-    x: canvas.width / 2 - 25,
-    y: canvas.height - 100,
-    radius: 25,
-    speed: 8,
-    movingLeft: false,
-    movingRight: false,
-  };
+  const skins = [
+    { id: 'default', name: 'Default', colors: ['#0af', '#005'], price: 0 },
+    { id: 'dream1', name: 'Aurora Glow', colors: ['#ff5f6d', '#ffc371'], price: 0.9 },
+    { id: 'dream2', name: 'Neon Pulse', colors: ['#0ff', '#0a0'], price: 1.9 },
+    { id: 'dream3', name: 'Star Glimmer', colors: ['#ffcc00', '#ff00cc'], price: 2.9 },
+    { id: 'dream4', name: 'Ocean Pearl', colors: ['#0ff', '#004'], price: 3.4 },
+    { id: 'dream5', name: 'Lunar Shine', colors: ['#999', '#fff'], price: 4.9 },
+    { id: 'dream6', name: 'Mystic Sky', colors: ['#4facfe', '#00f2fe'], price: 5.4 },
+    { id: 'dream7', name: 'Blazing Nova', colors: ['#ff6a00', '#ee0979'], price: 6.9 },
+    { id: 'dream8', name: 'Candy Pop', colors: ['#fcb045', '#fd1d1d'], price: 7.9 },
+    { id: 'dream9', name: 'Frozen Dream', colors: ['#83a4d4', '#b6fbff'], price: 8.9 },
+    { id: 'dream10', name: 'Golden Eye', colors: ['#FFD700', '#FFA500'], price: 9.9 },
+    { id: 'dream11', name: 'Fire Orb', colors: ['#FF512F', '#DD2476'], price: 11.9 },
+    { id: 'dream12', name: 'Galaxy Core', colors: ['#2b5876', '#4e4376'], price: 13.9 },
+    { id: 'dream13', name: 'Emerald Bloom', colors: ['#56ab2f', '#a8e063'], price: 15.4 },
+    { id: 'dream14', name: 'Pink Diamond', colors: ['#ff6a88', '#ff99ac'], price: 18.0 },
+    { id: 'dream15', name: 'Ethereal Flame', colors: ['#ff9966', '#ff5e62'], price: 20.0 },
+  ];
 
-  for(let i=0; i<150; i++) {
-    stars.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      radius: Math.random()*1.5,
-      speed: 0.2 + Math.random()*1.5
+  let selectedSkin = skins[0];
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    if(player) {
+      player.y = height - 100;
+      player.x = Math.min(player.x, width - player.radius * 2);
+    }
+
+    stars = [];
+    for(let i=0; i<150; i++) {
+      stars.push({
+        x: Math.random()*width,
+        y: Math.random()*height,
+        radius: Math.random()*1.5,
+        speed: 0.2 + Math.random()*1.5
+      });
+    }
+  }
+
+  function createPlayer() {
+    player = {
+      x: width/2 - 25,
+      y: height - 100,
+      radius: 25,
+      speed: 8,
+      movingLeft: false,
+      movingRight: false,
+      colors: selectedSkin.colors
+    };
+  }
+
+  function drawBackground() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,width,height);
+    ctx.fillStyle = '#fff';
+    stars.forEach(star => {
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.radius, 0, Math.PI*2);
+      ctx.fill();
+      star.y += star.speed;
+      if(star.y > height) {
+        star.y = 0;
+        star.x = Math.random()*width;
+      }
     });
   }
 
+  function drawPlayer() {
+    const grd = ctx.createRadialGradient(
+      player.x + player.radius,
+      player.y + player.radius,
+      player.radius/2,
+      player.x + player.radius,
+      player.y + player.radius,
+      player.radius
+    );
+    grd.addColorStop(0, player.colors[0]);
+    grd.addColorStop(1, player.colors[1]);
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.arc(player.x + player.radius, player.y + player.radius, player.radius, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawObstacles() {
+    obstacles.forEach(ob => {
+      const gradient = ctx.createLinearGradient(ob.x, ob.y, ob.x+ob.width, ob.y+ob.height);
+      gradient.addColorStop(0, '#4b0082');     // dark purple
+      gradient.addColorStop(0.5, '#6a0dad');   // purple
+      gradient.addColorStop(1, '#33004d');     // darker purple
+      ctx.fillStyle = gradient;
+      ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+    });
+  }
+
+  function spawnObstacle() {
+    const width = 40 + Math.random()*30;
+    const x = Math.random()*(width < (width - width) ? 0 : (width ? (width - width) : 0)); // Corrected below
+    // fix x to spawn anywhere in canvas width minus obstacle width
+    const xPos = Math.random()*(width - width);
+    // The above is incorrect, fix:
+
+    const obsWidth = 40 + Math.random()*30;
+    const xPosCorrect = Math.random() * (width - obsWidth);
+
+    obstacles.push({x: xPosCorrect, y: -60, width: obsWidth, height: 20, speed: getSpeedForLevel()});
+  }
+
+  // Fix spawnObstacle to proper version:
+  function spawnObstacle() {
+    const obsWidth = 40 + Math.random()*30;
+    const xPos = Math.random() * (width - obsWidth);
+    obstacles.push({ x: xPos, y: -60, width: obsWidth, height: 20, speed: getSpeedForLevel() });
+  }
+
+  function getSpeedForLevel() {
+    // Increase speed by 1 per level
+    return 6 + currentLevel;
+  }
+
+  function showLevelUp(level) {
+    levelMessage.textContent = `LEVEL ${level}!`;
+    levelMessage.style.display = 'block';
+    setTimeout(() => { levelMessage.style.display = 'none'; }, 2000);
+  }
+
+  function updateScoreAndLevel() {
+    scoreDisplay.textContent = `Score: ${score}`;
+
+    // Levels at exact scores 1000, 2000, 3000, ...
+    const newLevel = Math.floor(score / 1000);
+    if(newLevel > currentLevel) {
+      currentLevel = newLevel;
+      player.speed += 1; // speed increase each level
+      showLevelUp(currentLevel);
+    }
+  }
+
+  function update() {
+    if(!gameActive || paused) return;
+
+    drawBackground();
+
+    // Spawn obstacles randomly with some chance
+    if(Math.random() < 0.02) spawnObstacle();
+
+    obstacles.forEach(ob => {
+      ob.y += ob.speed;
+    });
+
+    // Remove obstacles that went off screen
+    obstacles = obstacles.filter(ob => ob.y < height);
+
+    // Check collision player vs obstacles
+    for(const ob of obstacles) {
+      if(
+        ob.x < player.x + player.radius*2 &&
+        ob.x + ob.width > player.x &&
+        ob.y < player.y + player.radius*2 &&
+        ob.y + ob.height > player.y
+      ) {
+        if(soundOn) hitSound.play();
+        gameActive = false;
+        // Show continue screen
+        continueAvailable = true;
+        continueScreen.style.display = 'flex';
+        return;
+      }
+    }
+
+    // Move player
+    if(player.movingLeft) player.x -= player.speed;
+    if(player.movingRight) player.x += player.speed;
+
+    // Clamp player position inside canvas
+    player.x = Math.max(0, Math.min(width - player.radius*2, player.x));
+
+    drawPlayer();
+    drawObstacles();
+
+    score++;
+    updateScoreAndLevel();
+
+    requestAnimationFrame(update);
+  }
+
+  function startGame() {
+    score = 0;
+    currentLevel = 0;
+    obstacles = [];
+    createPlayer();
+    gameActive = true;
+    paused = false;
+    continueAvailable = false;
+
+    pauseToggle.textContent = '⏸️';
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    continueScreen.style.display = 'none';
+    if(soundOn) bgMusic.play();
+
+    requestAnimationFrame(update);
+  }
+
+  function endGame() {
+    gameActive = false;
+    finalScoreDisplay.textContent = `Score: ${score}`;
+    gameOverScreen.style.display = 'flex';
+    bgMusic.pause();
+  }
+
+  // Input Handling
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if(!gameActive) return;
+    if(e.key === 'ArrowLeft' || e.key === 'a') player.movingLeft = true;
+    if(e.key === 'ArrowRight' || e.key === 'd') player.movingRight = true;
+  });
+
+  window.addEventListener('keyup', e => {
+    if(!gameActive) return;
+    if(e.key === 'ArrowLeft' || e.key === 'a') player.movingLeft = false;
+    if(e.key === 'ArrowRight' || e.key === 'd') player.movingRight = false;
+  });
+
+  // Touch for mobile: drag left-right on bottom half
+  let touchX = null;
+  canvas.addEventListener('touchstart', e => {
+    if(!gameActive) return;
+    const t = e.touches[0];
+    if(t.clientY > height / 2) {
+      touchX = t.clientX;
+    }
+  });
+  canvas.addEventListener('touchmove', e => {
+    if(!gameActive || touchX === null) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchX;
+    player.x += dx;
+    player.x = Math.max(0, Math.min(width - player.radius*2, player.x));
+    touchX = t.clientX;
+  });
+  canvas.addEventListener('touchend', e => {
+    touchX = null;
+  });
+
+  // Sound toggle
   soundToggle.onclick = () => {
     soundOn = !soundOn;
     soundToggle.textContent = soundOn ? '🔊' : '🔇';
@@ -157,6 +428,7 @@
     else bgMusic.pause();
   };
 
+  // Pause toggle
   pauseToggle.onclick = () => {
     if(!gameActive) return;
     paused = !paused;
@@ -168,143 +440,56 @@
     }
   };
 
-  function showLevelUp(level) {
-    levelMessage.textContent = `LEVEL ${level}!`;
-    levelMessage.style.display = 'block';
-    setTimeout(() => { levelMessage.style.display = 'none'; }, 2000);
-  }
+  // Continue screen buttons
+  watchAdBtn.onclick = () => {
+    // Simulate watching ad with timeout
+    continueScreen.style.display = 'none';
+    setTimeout(() => {
+      // Continue game
+      createPlayer();
+      gameActive = true;
+      paused = false;
+      if(soundOn) bgMusic.play();
+      requestAnimationFrame(update);
+    }, 1500);
+  };
 
-  function getObstacleSpeed() {
-    const levels = [1000, 2000, 5000, 10000, 20000, 50000];
-    const speeds = [8, 10, 12, 14, 16, 18];
-    for(let i=levels.length-1; i>=0; i--) {
-      if(score >= levels[i]) {
-        if(currentLevel !== i+1) {
-          currentLevel = i+1;
-          showLevelUp(currentLevel);
-        }
-        return speeds[i];
-      }
-    }
-    return 6;
-  }
+  noThanksBtn.onclick = () => {
+    continueScreen.style.display = 'none';
+    endGame();
+  };
 
-  function spawnObstacle() {
-    const width = 40 + Math.random()*30;
-    const x = Math.random()*(canvas.width - width);
-    const speed = getObstacleSpeed();
-    obstacles.push({x, y: -60, width, height: 20, speed});
-  }
-
-  function drawPlayer() {
-    const grd = ctx.createRadialGradient(
-      player.x + player.radius,
-      player.y + player.radius,
-      player.radius / 2,
-      player.x + player.radius,
-      player.y + player.radius,
-      player.radius
-    );
-    grd.addColorStop(0, '#0af');
-    grd.addColorStop(1, '#005');
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(player.x + player.radius, player.y + player.radius, player.radius, 0, Math.PI*2);
-    ctx.fill();
-  }
-
-  function drawObstacles() {
-    for(const ob of obstacles) {
-      const gradient = ctx.createLinearGradient(ob.x, ob.y, ob.x+ob.width, ob.y+ob.height);
-      gradient.addColorStop(0, '#6a0dad');     // Deep purple
-      gradient.addColorStop(0.5, '#9b30ff');   // Bright purple
-      gradient.addColorStop(1, '#4b0082');     // Indigo
-      ctx.fillStyle = gradient;
-      ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-    }
-  }
-
-  function drawBackground() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#fff';
-    for(const star of stars) {
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.radius, 0, Math.PI*2);
-      ctx.fill();
-      star.y += star.speed;
-      if(star.y > canvas.height) {
-        star.y = 0;
-        star.x = Math.random()*canvas.width;
-      }
-    }
-  }
-
-  function update() {
-    if(!gameActive || paused) return;
-    drawBackground();
-
-    if(Math.random() < 0.02) spawnObstacle();
-
-    for(const ob of obstacles) {
-      ob.y += ob.speed;
-      if(
-        ob.x < player.x + player.radius*2 &&
-        ob.x + ob.width > player.x &&
-        ob.y < player.y + player.radius*2 &&
-        ob.y + ob.height > player.y
-      ) {
-        if(soundOn) hitSound.play();
-        return endGame();
-      }
-    }
-    obstacles = obstacles.filter(o => o.y < canvas.height);
-
-    if(player.movingLeft) player.x -= player.speed;
-    if(player.movingRight) player.x += player.speed;
-    player.x = Math.max(0, Math.min(canvas.width - player.radius*2, player.x));
-
-    drawPlayer();
-    drawObstacles();
-
-    score++;
-    scoreDisplay.textContent = `Score: ${score}`;
-
-    requestAnimationFrame(update);
-  }
-
-  function startGame() {
-    score = 0;
-    obstacles = [];
-    gameActive = true;
-    paused = false;
-    currentLevel = 0;
-    pauseToggle.textContent = '⏸️';
-    startScreen.style.display = 'none';
-    gameOverScreen.style.display = 'none';
-    if(soundOn) bgMusic.play();
-    requestAnimationFrame(update);
-  }
-
-  function endGame() {
-    gameActive = false;
-    finalScoreDisplay.textContent = `Score: ${score}`;
-    gameOverScreen.style.display = 'flex';
-    bgMusic.pause();
-  }
-
+  // Start / Retry buttons
   document.getElementById('play-btn').onclick = startGame;
   document.getElementById('retry-btn').onclick = startGame;
 
-  window.addEventListener('keydown', e => {
-    if(e.key === 'ArrowLeft') player.movingLeft = true;
-    if(e.key === 'ArrowRight') player.movingRight = true;
-  });
+  // Skins store
+  function renderSkins() {
+    skinList.innerHTML = '';
+    skins.forEach(skin => {
+      const btn = document.createElement('button');
+      btn.innerText = `${skin.name}\n$${skin.price}`;
+      btn.style.background = `linear-gradient(45deg, ${skin.colors[0]}, ${skin.colors[1]})`;
+      btn.onclick = () => {
+        selectedSkin = skin;
+        alert(`Selected skin: ${skin.name}\n(In real app: Purchase flow here)`);
+        createPlayer();
+        skinStore.style.display = 'none';
+      };
+      skinList.appendChild(btn);
+    });
+  }
+  storeBtn.onclick = () => {
+    skinStore.style.display = 'flex';
+    renderSkins();
+  };
+  closeSkinStoreBtn.onclick = () => {
+    skinStore.style.display = 'none';
+  };
 
-  window.addEventListener('keyup', e => {
-    if(e.key === 'ArrowLeft') player.movingLeft = false;
-    if(e.key === 'ArrowRight') player.movingRight = false;
-  });
+  window.addEventListener('resize', resize);
+  resize();
+  createPlayer();
 
 })();
 </script>
